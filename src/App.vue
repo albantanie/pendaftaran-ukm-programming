@@ -2,7 +2,6 @@
 import { RouterView } from 'vue-router'
 import Header from './components/layouts/Header.vue'
 import Footer from './components/layouts/Footer.vue'
-import AppNotification from './components/layouts/AppNotification.vue';
 </script>
 
 <template>

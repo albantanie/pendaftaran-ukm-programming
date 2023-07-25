@@ -12,7 +12,6 @@
           <!-- Table Header -->
           <thead>
             <tr>
-              <th scope="col">Id</th>
               <th scope="col">Nama</th>
               <th scope="col">Email</th>
               <th scope="col">Alasan</th>
@@ -23,7 +22,6 @@
           <!-- Table Body -->
           <tbody>
             <tr v-for="result in results" :key="result.id">
-              <th scope="row">{{ result.id }}</th>
               <td>{{ result.nama }}</td>
               <td>{{ result.email }}</td>
               <td>{{ result.reason }}</td>
@@ -45,7 +43,7 @@
                 </button>
               </td>
               <td>
-                <button type="button" class="btn" data-bs-toggle="modal" :data-bs-target="'#' + result.id">
+                <button @click="openModal(result)"  class="btn">
                   <svg
                     style="color: rgb(43, 245, 70)"
                     xmlns="http://www.w3.org/2000/svg"
@@ -61,31 +59,6 @@
                   </svg>
                 </button>
               </td>
-              <!-- Modal -->
-              <div class="modal fade" :id="result.id" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="staticBackdropLabel">Update Data</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <form class="form text-start">
-                        <label for="nama">Nama</label>
-                        <input ref="" class="form-control mb-2" type="text" placeholder="Nama" id="nama" v-model="result.nama" />
-                        <label for="email">Email</label>
-                        <input ref="" class="form-control mb-2" type="text" placeholder="Email" id="email" v-model="result.email" />
-                        <label for="alasan">Alasan</label>
-                        <input ref="" class="form-control mb-2" type="text" placeholder="Alasan" id="alasan" v-model="result.reason" />
-                      </form>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                      <button @click="updateData(result)" type="button" class="btn btn-primary">Update</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </tr>
           </tbody>
         </table>
@@ -93,8 +66,33 @@
       <!-- Export button -->
       <button @click="exportToExcel" class="btn btn-primary">Export to Excel</button>
     </div>
-  </div>
-</template>
+    <!-- Modal -->
+    <div v-if="selectedData" class="modal" id="editModal" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel">Update Data</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="#editModal" aria-label="Close" @click="closeModal"></button>
+          </div>
+          <div class="modal-body">
+            <form class="form text-start">
+              <label for="nama">Nama</label>
+              <input ref="" class="form-control mb-2" type="text" placeholder="Nama" id="nama" v-model="selectedData.nama" />
+              <label for="email">Email</label>
+              <input ref="" class="form-control mb-2" type="text" placeholder="Email" id="email" v-model="selectedData.email" />
+              <label for="alasan">Alasan</label>
+              <input ref="" class="form-control mb-2" type="text" placeholder="Alasan" id="alasan" v-model="selectedData.reason" />
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="#editModal" @click="closeModal">Tutup</button>
+            <button @click="updateData(selectedData)" type="button" class="btn btn-primary">Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    </template>
 
 <script setup>
 import { ref, watch } from 'vue';
@@ -106,6 +104,8 @@ import { saveAs } from 'file-saver';
 const results = ref([]);
 const showPasswordDialog = ref(true);
 const adminPassword = ref('');
+const selectedData = ref(null);
+const showModal = ref(false); // Used for Vue approach to show/hide modal
 
 // Fetch data from Firebase
 onSnapshot(collection(db, 'datas'), (querySnapshot) => {
@@ -141,6 +141,12 @@ async function deleteData(id) {
   await deleteDoc(doc(db, 'datas', id));
 }
 
+// Open the modal and set the selected data
+function openModal(data) {
+  selectedData.value = { ...data };
+  showModal.value = true; // Vue approach to show the modal
+}
+
 // Update data
 async function updateData(data) {
   await updateDoc(doc(db, 'datas', data.id), {
@@ -148,7 +154,8 @@ async function updateData(data) {
     email: data.email,
     reason: data.reason,
   });
-  location.reload();
+  selectedData.value = null;
+  showModal.value = false; // Hide the modal after updating data (Vue approach)
 }
 
 // Export data to Excel
@@ -172,6 +179,11 @@ function checkPassword() {
     alert('Password yang Anda masukkan salah. Coba lagi.');
     adminPassword.value = '';
   }
+}
+
+function closeModal() {
+  selectedData.value = null;
+  showModal.value = false; // Hide the modal after updating data (Vue approach)
 }
 </script>
 
